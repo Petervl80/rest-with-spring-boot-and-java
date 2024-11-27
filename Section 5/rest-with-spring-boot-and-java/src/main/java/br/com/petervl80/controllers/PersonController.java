@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.petervl80.model.Person;
+import br.com.petervl80.data.vo.v1.PersonVO;
 import br.com.petervl80.services.PersonServices;
 
 @RestController
@@ -26,28 +26,28 @@ public class PersonController {
 
 	@GetMapping(value = "/{id}",
 			produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Person> findById(@PathVariable Long id) {
+	public ResponseEntity<PersonVO> findById(@PathVariable Long id) {
 		return ResponseEntity.ok().body(service.findById(id));
 	}
 	
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<List<Person>> findAll() {
+	public ResponseEntity<List<PersonVO>> findAll() {
 		return ResponseEntity.ok().body(service.findAll());
 	}
 	
 	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Person> create(@RequestBody Person person) {
-		return ResponseEntity.ok().body(service.create(person));
+	public ResponseEntity<PersonVO> create(@RequestBody PersonVO PersonVo) {
+		return ResponseEntity.ok().body(service.create(PersonVo));
 	}
 	
 	@PutMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Person> update(@RequestBody Person person) {
-		return ResponseEntity.ok().body(service.update(person));
+	public ResponseEntity<PersonVO> update(@RequestBody PersonVO PersonVo) {
+		return ResponseEntity.ok().body(service.update(PersonVo));
 	}
 	
 	@DeleteMapping(value = "/{id}",
 			produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Person> delete(@PathVariable Long id) {
+	public ResponseEntity<PersonVO> delete(@PathVariable Long id) {
 		service.delete(id);
 		return ResponseEntity.noContent().build();
 	}
