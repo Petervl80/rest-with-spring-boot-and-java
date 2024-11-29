@@ -6,7 +6,3 @@ CREATE TABLE IF NOT EXISTS `person` (
   `gender` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
-
-INSERT INTO `person` (`id`, `address`, `first_name`, `gender`, `last_name`) VALUES
-	(3, 'Recife', 'Sla', 'Male', 'Senna'),
-	(4, 'Recife', 'Sla', 'Male', 'Senna');
