@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.petervl80.controllers.PersonController;
 import br.com.petervl80.data.vo.v1.PersonVO;
+import br.com.petervl80.exceptions.RequiredObjectIsNullException;
 import br.com.petervl80.exceptions.ResourceNotFoundException;
 import br.com.petervl80.mapper.DozerMapper;
 import br.com.petervl80.model.Person;
@@ -45,6 +46,8 @@ public class PersonServices {
 
 	public PersonVO create(PersonVO person) {
 
+		if(person == null) throw new RequiredObjectIsNullException();
+		
 		logger.info("creating one person!");
 
 		var entity = DozerMapper.parseObject(person, Person.class);
@@ -55,6 +58,8 @@ public class PersonServices {
 	}
 
 	public PersonVO update(PersonVO person) {
+		
+		if(person == null) throw new RequiredObjectIsNullException();
 
 		logger.info("updating one person!");
 
