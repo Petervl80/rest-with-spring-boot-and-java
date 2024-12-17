@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.petervl80.data.vo.v1.PersonVO;
-import br.com.petervl80.services.PersonServices;
+import br.com.petervl80.data.vo.v1.BookVO;
+import br.com.petervl80.services.BookServices;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -23,75 +23,75 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/person/v1")
-@Tag(name = "People", description = "Endpoints for Managing People")
-public class PersonController {
+@RequestMapping("/api/book/v1")
+@Tag(name = "Book", description = "Endpoints for Managing Book")
+public class BookController {
 
 	@Autowired
-	private PersonServices service;
+	private BookServices service;
 
 	@GetMapping(value = "/{id}")
-	@Operation(summary = "Finds a Person", description = "Finds a Person", tags = { "People" }, responses = {
+	@Operation(summary = "Finds a Book", description = "Finds a Book", tags = { "Book" }, responses = {
 			@ApiResponse(description = "Sucess", responseCode = "200", content =
-					@Content(schema = @Schema(implementation = PersonVO.class))),
+					@Content(schema = @Schema(implementation = BookVO.class))),
 			@ApiResponse(description = "No Content", responseCode = "204", content = @Content),
 			@ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
 			@ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
 			@ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
 			@ApiResponse(description = "Internal Error", responseCode = "500", content = @Content) })
-	public ResponseEntity<PersonVO> findById(@PathVariable Long id) {
+	public ResponseEntity<BookVO> findById(@PathVariable Long id) {
 		return ResponseEntity.ok().body(service.findById(id));
 	}
 
 	@GetMapping
-	@Operation(summary = "Finds all People", description = "Finds all People", tags = { "People" }, responses = {
+	@Operation(summary = "Finds all Book", description = "Finds all Book", tags = { "Book" }, responses = {
 			@ApiResponse(description = "Sucess", responseCode = "200", content = {
-					@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PersonVO.class))) }),
+					@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BookVO.class))) }),
 			@ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
 			@ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
 			@ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
 			@ApiResponse(description = "Internal Error", responseCode = "500", content = @Content) })
-	public ResponseEntity<List<PersonVO>> findAll() {
+	public ResponseEntity<List<BookVO>> findAll() {
 		return ResponseEntity.ok().body(service.findAll());
 	}
 
 	@PostMapping
-	@Operation(summary = "Adds a new Person",
-		description = "Adds a new Person by passing in a JSON, XML or YML representation of the person", tags = { "People" },
+	@Operation(summary = "Adds a new Book",
+		description = "Adds a new Book by passing in a JSON, XML or YML representation of the book", tags = { "Book" },
 		responses = {
 			@ApiResponse(description = "Sucess", responseCode = "200", content =
-					@Content(schema = @Schema(implementation = PersonVO.class))),
+					@Content(schema = @Schema(implementation = BookVO.class))),
 			@ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
 			@ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
 			@ApiResponse(description = "Internal Error", responseCode = "500", content = @Content) })
-	public ResponseEntity<PersonVO> create(@RequestBody PersonVO PersonVo) {
-		return ResponseEntity.ok().body(service.create(PersonVo));
+	public ResponseEntity<BookVO> create(@RequestBody BookVO BookVo) {
+		return ResponseEntity.ok().body(service.create(BookVo));
 	}
 
 	@PutMapping
-	@Operation(summary = "Updates a Person",
-	description = "Updates a Person by passing in a JSON, XML or YML representation of the person", tags = { "People" },
+	@Operation(summary = "Updates a Book",
+	description = "Updates a Book by passing in a JSON, XML or YML representation of the book", tags = { "Book" },
 	responses = {
 		@ApiResponse(description = "Updated", responseCode = "200", content =
-				@Content(schema = @Schema(implementation = PersonVO.class))),
+				@Content(schema = @Schema(implementation = BookVO.class))),
 		@ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
 		@ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
 		@ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
 		@ApiResponse(description = "Internal Error", responseCode = "500", content = @Content) })
-	public ResponseEntity<PersonVO> update(@RequestBody PersonVO PersonVo) {
-		return ResponseEntity.ok().body(service.update(PersonVo));
+	public ResponseEntity<BookVO> update(@RequestBody BookVO BookVo) {
+		return ResponseEntity.ok().body(service.update(BookVo));
 	}
 
 	@DeleteMapping(value = "/{id}")
-	@Operation(summary = "Deletes a Person",
-	description = "Deletes a Person by passing in a JSON, XML or YML representation of the person", tags = { "People" },
+	@Operation(summary = "Deletes a Book",
+	description = "Deletes a Book by passing in a JSON, XML or YML representation of the book", tags = { "Book" },
 	responses = {
 		@ApiResponse(description = "No content", responseCode = "204", content = @Content),
 		@ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
 		@ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
 		@ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
 		@ApiResponse(description = "Internal Error", responseCode = "500", content = @Content) })
-	public ResponseEntity<PersonVO> delete(@PathVariable Long id) {
+	public ResponseEntity<BookVO> delete(@PathVariable Long id) {
 		service.delete(id);
 		return ResponseEntity.noContent().build();
 	}
