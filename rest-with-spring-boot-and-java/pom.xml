@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.github.petervl80</groupId>
-	<artifactId>aula-04</artifactId>
+	<artifactId>rest-with-spring-boot-and-java</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>rest-with-spring-boot-and-java</name>
 	<description>Demo project for Spring Boot</description>
