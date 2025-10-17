@@ -3,44 +3,63 @@ package com.github.petervl80.service;
 import com.github.petervl80.exception.ResourceNotFoundException;
 import com.github.petervl80.model.Person;
 import com.github.petervl80.repository.PersonRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class PersonService {
     
-    private final AtomicLong counter = new AtomicLong();
+    private final Logger logger = LoggerFactory.getLogger(PersonService.class.getName());
 
     @Autowired
-    private PersonRepository repository;
-    
+    PersonRepository repository;
+
+
+    public List<Person> findAll() {
+
+        logger.info("Finding all People!");
+
+        return repository.findAll();
+    }
+
+    public Person findById(Long id) {
+        logger.info("Finding one Person!");
+
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+    }
+
     public Person create(Person person) {
+
+        logger.info("Creating one Person!");
+
         return repository.save(person);
     }
-    
+
     public Person update(Person person) {
-        Person entity = findById(person.getId());
+
+        logger.info("Updating one Person!");
+        Person entity = repository.findById(person.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+
         entity.setFirstName(person.getFirstName());
         entity.setLastName(person.getLastName());
         entity.setAddress(person.getAddress());
         entity.setGender(person.getGender());
-        return repository.save(entity);
-    }    
-    
+
+        return repository.save(person);
+    }
+
     public void delete(Long id) {
-        Person entity = findById(id);
-        repository.delete(entity);
-    }
-    
-    public Person findById(Long id) {
-        return repository.findById(id)
+
+        logger.info("Deleting one Person!");
+
+        Person entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
-    }
-    
-    public List<Person> findAll() {
-        return repository.findAll();
+        repository.delete(entity);
     }
 }
