@@ -16,7 +16,7 @@ spring:
         show-sql: false
 logging:
   level:
-    root: WARN
-    com.example: DEBUG
+    root: INFO
+    com.github.petervl80: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
