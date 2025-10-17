@@ -1,6 +1,6 @@
 package com.github.petervl80.unittests.mapper.mocks;
 
-import com.github.petervl80.data.dto.PersonDTO;
+import com.github.petervl80.data.dto.v1.PersonDTO;
 import com.github.petervl80.model.Person;
 
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.github.petervl80.data.dto;
+package com.github.petervl80.data.dto.v1;
 
 import java.io.Serial;
 import java.io.Serializable;

@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 
-import com.github.petervl80.data.dto.PersonDTO;
+import com.github.petervl80.data.dto.v1.PersonDTO;
 import com.github.petervl80.model.Person;
 import com.github.petervl80.unittests.mapper.mocks.MockPerson;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,6 +1,7 @@
 package com.github.petervl80.controller;
 
-import com.github.petervl80.data.dto.PersonDTO;
+import com.github.petervl80.data.dto.v1.PersonDTO;
+import com.github.petervl80.data.dto.v2.PersonDTOV2;
 import com.github.petervl80.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -36,6 +37,14 @@ public class PersonController {
         return service.create(person);
     }
 
+    @PostMapping(value = "/v2",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public PersonDTOV2 create(@RequestBody PersonDTOV2 person) {
+        return service.createV2(person);
+    }
+
     @PutMapping(
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -50,5 +59,4 @@ public class PersonController {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
-    
 }
