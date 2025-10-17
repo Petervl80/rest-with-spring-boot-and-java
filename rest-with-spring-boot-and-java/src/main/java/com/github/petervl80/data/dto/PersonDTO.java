@@ -1,9 +1,17 @@
 package com.github.petervl80.data.dto;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.github.petervl80.serializer.GenderSerializer;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
+@JsonPropertyOrder({"id", "first_name", "last_name", "address", "gender"})
+@JsonFilter("PersonFilter")
 public class PersonDTO implements Serializable {
 
     @Serial
@@ -11,12 +19,15 @@ public class PersonDTO implements Serializable {
 
     private Long id;
 
+    @JsonProperty("first_name")
     private String firstName;
 
+    @JsonProperty("last_name")
     private String lastName;
 
     private String address;
 
+    @JsonSerialize(using = GenderSerializer.class)
     private String gender;
 
     public PersonDTO() {
