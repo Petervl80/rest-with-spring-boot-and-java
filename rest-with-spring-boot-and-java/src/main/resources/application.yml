@@ -20,3 +20,8 @@ logging:
     com.github.petervl80: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+spring-doc:
+  paths-to-match: /api/**/v1/**
+  swagger-ui:
+    use-root-path: true
