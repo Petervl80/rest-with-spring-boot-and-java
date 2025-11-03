@@ -1,5 +1,5 @@
 INSERT INTO `person`
 VALUES
-(1,'Recife - Pernambuco - Brasil','Pedro','Male','Lapa'),
-(2,'Recife - Pernambuco - Brasil - F1','Ayton','Male','Senna'),
-(3,'Recife - Pernambuco - Brasil','Gustavo','Male','Carvalho');
+(1,'Pedro','Lapa','Recife - Pernambuco - Brasil','Male'),
+(2,'Ayrton','Senna', 'Recife - Pernambuco - Brasil - F1', 'Male'),
+(3,'Gustavo','Carvalho', 'Recife - Pernambuco - Brasil', 'Male');
