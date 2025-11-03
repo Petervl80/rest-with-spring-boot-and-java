@@ -1,9 +1,10 @@
-package com.github.petervl80.service;
+package com.github.petervl80.unittests.service;
 
 import com.github.petervl80.data.dto.PersonDTO;
 import com.github.petervl80.exception.RequiredObjectIsNullException;
 import com.github.petervl80.model.Person;
 import com.github.petervl80.repository.PersonRepository;
+import com.github.petervl80.service.PersonService;
 import com.github.petervl80.unittests.mapper.mocks.MockPerson;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,7 @@ class PersonServiceTest {
         Person person = input.mockEntity(1);
         when(repository.findById(1L)).thenReturn(Optional.of(person));
         var result = service.findById(1L);
-        assertPerson(result, "/persons/1");
+        assertPerson(result, "/api/persons/v1/1");
     }
 
     @Test
@@ -59,7 +60,7 @@ class PersonServiceTest {
 
         var result = service.create(dto);
 
-        assertPerson(result, "/persons/1");
+        assertPerson(result, "/api/persons/v1/1");
     }
 
     @Test
@@ -86,7 +87,7 @@ class PersonServiceTest {
 
         var result = service.update(dto);
 
-        assertPerson(result, "/persons/" + result.getId());
+        assertPerson(result, "/api/persons/v1/" + result.getId());
     }
 
     @Test
@@ -121,13 +122,13 @@ class PersonServiceTest {
         assertEquals(14, people.size());
 
         var person1 = people.get(1);
-        assertPerson(person1, "/persons/" + person1.getId());
+        assertPerson(person1, "/api/persons/v1/" + person1.getId());
 
         var person4 = people.get(4);
-        assertPerson(person4, "/persons/" + person4.getId());
+        assertPerson(person4, "/api/persons/v1/" + person4.getId());
 
         var person7 = people.get(7);
-        assertPerson(person7, "/persons/" + person7.getId());
+        assertPerson(person7, "/api/persons/v1/" + person7.getId());
     }
 
     private static void assertPerson(PersonDTO result, String result1) {
@@ -146,17 +147,17 @@ class PersonServiceTest {
 
         assertTrue(result.getLinks().stream()
                 .anyMatch(link -> link.getRel().value().equals("findAll")
-                        && link.getHref().endsWith("/persons")
+                        && link.getHref().endsWith("/api/persons/v1")
                         && Objects.equals(link.getType(), "GET")));
 
         assertTrue(result.getLinks().stream()
                 .anyMatch(link -> link.getRel().value().equals("create")
-                        && link.getHref().endsWith("/persons")
+                        && link.getHref().endsWith("/api/persons/v1")
                         && Objects.equals(link.getType(), "POST")));
 
         assertTrue(result.getLinks().stream()
                 .anyMatch(link -> link.getRel().value().equals("update")
-                        && link.getHref().endsWith("/persons")
+                        && link.getHref().endsWith("/api/persons/v1")
                         && Objects.equals(link.getType(), "PUT")));
 
         assertTrue(result.getLinks().stream()

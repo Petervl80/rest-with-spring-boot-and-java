@@ -1,11 +1,10 @@
+server:
+    port: 8888
 spring:
   application:
     name: rest-with-spring-boot-and-java
   datasource:
-    url: jdbc:mysql://localhost:3306/rest_with_spring_boot?useTimezone=true&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: root123457
   jpa:
     hibernate:
       ddl-auto: none

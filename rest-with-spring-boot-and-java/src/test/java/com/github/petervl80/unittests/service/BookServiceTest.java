@@ -1,9 +1,10 @@
-package com.github.petervl80.service;
+package com.github.petervl80.unittests.service;
 
 import com.github.petervl80.data.dto.BookDTO;
 import com.github.petervl80.exception.RequiredObjectIsNullException;
 import com.github.petervl80.model.Book;
 import com.github.petervl80.repository.BookRepository;
+import com.github.petervl80.service.BookService;
 import com.github.petervl80.unittests.mapper.mocks.MockBook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
