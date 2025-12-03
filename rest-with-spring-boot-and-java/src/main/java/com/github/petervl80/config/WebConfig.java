@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
@@ -13,7 +14,7 @@ public class WebConfig implements WebMvcConfigurer {
     private String originPatterns;
 
     @Override
-    public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {
+    public void addCorsMappings(CorsRegistry registry) {
         String[] allowedOrigins = originPatterns.split(",");
         registry.addMapping("/**")
                 .allowedOrigins(allowedOrigins)
