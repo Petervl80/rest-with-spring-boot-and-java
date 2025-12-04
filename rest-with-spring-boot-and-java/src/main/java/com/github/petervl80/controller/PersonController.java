@@ -2,18 +2,25 @@ package com.github.petervl80.controller;
 
 import com.github.petervl80.controller.docs.PersonControllerDocs;
 import com.github.petervl80.data.dto.PersonDTO;
+import com.github.petervl80.file.exporter.MediaTypes;
 import com.github.petervl80.service.PersonService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 //@CrossOrigin(origins = "http://localhost:8080")
 @RestController
@@ -30,9 +37,9 @@ public class PersonController implements PersonControllerDocs {
             MediaType.APPLICATION_YAML_VALUE})
     @Override
     public ResponseEntity<PagedModel<EntityModel<PersonDTO>>> findAll(
-            @RequestParam (value = "page", defaultValue = "0") Integer page,
-            @RequestParam (value = "size", defaultValue = "12") Integer size,
-            @RequestParam (value = "direction", defaultValue = "asc") String direction
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "12") Integer size,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction
     ) {
         var sortDirection = "desc".equalsIgnoreCase(direction) ? Direction.DESC : Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, "firstName"));
@@ -41,15 +48,15 @@ public class PersonController implements PersonControllerDocs {
 
     @GetMapping(value = "/findByFirstName/{firstName}",
             produces = {
-            MediaType.APPLICATION_JSON_VALUE,
-            MediaType.APPLICATION_XML_VALUE,
-            MediaType.APPLICATION_YAML_VALUE})
+                    MediaType.APPLICATION_JSON_VALUE,
+                    MediaType.APPLICATION_XML_VALUE,
+                    MediaType.APPLICATION_YAML_VALUE})
     @Override
     public ResponseEntity<PagedModel<EntityModel<PersonDTO>>> findByFirstName(
             @PathVariable("firstName") String firstName,
-            @RequestParam (value = "page", defaultValue = "0") Integer page,
-            @RequestParam (value = "size", defaultValue = "12") Integer size,
-            @RequestParam (value = "direction", defaultValue = "asc") String direction
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "12") Integer size,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction
     ) {
         var sortDirection = "desc".equalsIgnoreCase(direction) ? Direction.DESC : Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, "firstName"));
@@ -66,6 +73,35 @@ public class PersonController implements PersonControllerDocs {
         return service.findById(id);
     }
 
+    @GetMapping(value = "exportPage",
+            produces = {
+                    MediaTypes.APPLICATION_XLSX_VALUE,
+                    MediaTypes.APPLICATION_CSV_VALUE})
+    @Override
+    public ResponseEntity<Resource> exportPage(
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "12") Integer size,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction,
+            HttpServletRequest request) {
+        var sortDirection = "desc".equalsIgnoreCase(direction) ? Direction.DESC : Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, "firstName"));
+
+        String acceptHeader = request.getHeader(HttpHeaders.ACCEPT);
+
+        Resource file = service.exportPage(pageable, acceptHeader);
+
+        String contentType = acceptHeader != null ? acceptHeader : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        String fileExtension = MediaTypes.APPLICATION_XLSX_VALUE.equalsIgnoreCase(acceptHeader) ? ".xlsx" : ".csv";
+        String fileName = "people_exported" + fileExtension;
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + fileName + "\"")
+                .body(file);
+    }
+
     @PostMapping(
             consumes = {MediaType.APPLICATION_JSON_VALUE,
                     MediaType.APPLICATION_XML_VALUE,
@@ -77,6 +113,16 @@ public class PersonController implements PersonControllerDocs {
     @Override
     public PersonDTO create(@RequestBody PersonDTO person) {
         return service.create(person);
+    }
+
+    @PostMapping(value = "/massCreation",
+            produces = {MediaType.APPLICATION_JSON_VALUE,
+                    MediaType.APPLICATION_XML_VALUE,
+                    MediaType.APPLICATION_YAML_VALUE}
+    )
+    @Override
+    public List<PersonDTO> massCreation(@RequestParam("file") MultipartFile file) {
+        return service.massCreation(file);
     }
 
     @PutMapping(
