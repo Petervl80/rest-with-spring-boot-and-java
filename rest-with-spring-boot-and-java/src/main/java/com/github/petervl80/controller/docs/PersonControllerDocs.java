@@ -63,6 +63,19 @@ public interface PersonControllerDocs {
             @RequestParam(value = "direction", defaultValue = "asc") String direction
     );
 
+    @Operation(summary = "Export Person data as PDF",
+            description = "Export Person data as PDF by your id",
+            tags = "People",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Success",
+                            content = @Content(mediaType = MediaTypes.APPLICATION_PDF_VALUE)),
+                    @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Not Found", content = @Content),
+                    @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content),
+            })
+    ResponseEntity<Resource> export(@PathVariable("id") Long id, HttpServletRequest request);
+
     @Operation(summary = "Finds a Person by ID",
             description = "Finds a Person by ID",
             tags = "People",

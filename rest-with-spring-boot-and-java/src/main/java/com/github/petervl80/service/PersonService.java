@@ -6,7 +6,7 @@ import com.github.petervl80.exception.BadRequestException;
 import com.github.petervl80.exception.FileStorageException;
 import com.github.petervl80.exception.RequiredObjectIsNullException;
 import com.github.petervl80.exception.ResourceNotFoundException;
-import com.github.petervl80.file.exporter.contract.FileExporter;
+import com.github.petervl80.file.exporter.contract.PersonExporter;
 import com.github.petervl80.file.exporter.factory.FileExporterFactory;
 import com.github.petervl80.file.importer.contract.FileImporter;
 import com.github.petervl80.file.importer.factory.FileImporterFactory;
@@ -77,6 +77,21 @@ public class PersonService {
                         String.valueOf(pageable.getSort())));
     }
 
+    public Resource exportPerson(Long id, String acceptHeader) {
+        logger.info("Exporting data of a Person!");
+
+        var person = repository.findById(id)
+                .map(entity -> parseObject(entity, PersonDTO.class))
+                .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+
+        try {
+            PersonExporter exporter = this.exporterFactory.getExporter(acceptHeader);
+            return exporter.exportPerson(person);
+        } catch (Exception e) {
+            throw new RuntimeException("Error during file export!", e);
+        }
+    }
+
     public PersonDTO findById(Long id) {
         logger.info("Finding one Person!");
 
@@ -96,8 +111,8 @@ public class PersonService {
                 .getContent();
 
         try {
-            FileExporter exporter = this.exporterFactory.getExporter(acceptHeader);
-            return exporter.exportFile(people);
+            PersonExporter exporter = this.exporterFactory.getExporter(acceptHeader);
+            return exporter.exportPeople(people);
         } catch (Exception e) {
             throw new RuntimeException("Error during file export!", e);
         }
@@ -207,6 +222,7 @@ public class PersonService {
         dto.add(linkTo(methodOn(PersonController.class).findAll(0, 12, "asc"))
                 .withRel("findAll").withType("GET"));
         dto.add(linkTo(methodOn(PersonController.class).create(dto)).withRel("create").withType("POST"));
+        dto.add(linkTo(methodOn(PersonController.class).update(dto)).withRel("update").withType("PUT"));
         dto.add(linkTo(methodOn(PersonController.class).massCreation(null)).withRel("massCreation").withType("POST"));
         dto.add(linkTo(methodOn(PersonController.class).disablePerson(dto.getId())).withRel("disable")
                 .withType("PATCH"));
