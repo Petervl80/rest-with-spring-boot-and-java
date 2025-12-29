@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.petervl80.config.TestConfigs;
+import com.github.petervl80.integrationtests.dto.AccountCredentialsDTO;
 import com.github.petervl80.integrationtests.dto.PersonDTO;
+import com.github.petervl80.integrationtests.dto.TokenDTO;
 import com.github.petervl80.integrationtests.dto.wrapper.json.WrapperPersonDTO;
 import com.github.petervl80.integrationtests.testcontainers.AbstractIntegrationTest;
 import io.restassured.builder.RequestSpecBuilder;
@@ -28,6 +30,7 @@ class PersonControllerJsonTest extends AbstractIntegrationTest {
     private static RequestSpecification specification;
     private static ObjectMapper objectMapper;
     private static PersonDTO person;
+    private static TokenDTO tokenDTO;
 
     @BeforeAll
     static void setUp() {
@@ -35,6 +38,28 @@ class PersonControllerJsonTest extends AbstractIntegrationTest {
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
         person = new PersonDTO();
+        tokenDTO = new TokenDTO();
+    }
+
+    @Test
+    @Order(0)
+    void signin() {
+        AccountCredentialsDTO credentials = new AccountCredentialsDTO("leandro", "admin123");
+
+        tokenDTO = given()
+                .basePath("/auth/signin")
+                .port(TestConfigs.SERVER_PORT)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(credentials)
+                .when()
+                .post()
+                .then()
+                .statusCode(200)
+                .extract()
+                .body().as(TokenDTO.class);
+
+        assertNotNull(tokenDTO.getAccessToken());
+        assertNotNull(tokenDTO.getRefreshToken());
     }
 
     @Test
@@ -44,6 +69,7 @@ class PersonControllerJsonTest extends AbstractIntegrationTest {
 
         specification = new RequestSpecBuilder()
                 .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_LOCALHOST)
+                .addHeader(TestConfigs.HEADER_PARAM_AUTHORIZATION, "Bearer " + tokenDTO.getAccessToken())
                 .setBasePath("/api/persons/v1")
                 .setPort(TestConfigs.SERVER_PORT)
                 .addFilter(new RequestLoggingFilter((LogDetail.ALL)))
