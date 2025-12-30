@@ -1,0 +1,37 @@
+services:
+  db:
+    image: mysql:9.1.0
+    restart: always
+    environment:
+      TZ: America/Recife
+      MYSQL_ROOT_PASSWORD: admin123
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: admin123
+      MYSQL_DATABASE: rest_with_spring_boot
+    ports:
+      - "3308:3306"
+    expose:
+      - 3306
+    networks:
+      - rest-with-spring-boot-network
+
+  rest-with-spring-boot:
+    image: petervl80/rest-with-spring-boot
+    restart: always
+    build: ./rest-with-spring-boot-and-java
+    working_dir: /rest-with-spring-boot-and-java
+    environment:
+      TZ: America/Recife
+      DATASOURCE_URL: jdbc:mysql://db:3306/rest_with_spring_boot?useTimezone=true&serverTimezone=UTC
+      DATASOURCE_USERNAME: root
+      DATASOURCE_PASSWORD: admin123
+    command: mvn spring-boot:run
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+    networks:
+      - rest-with-spring-boot-network
+networks:
+  rest-with-spring-boot-network:
+    driver: bridge
