@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.petervl80.config.TestConfigs;
+import com.github.petervl80.integrationtests.dto.AccountCredentialsDTO;
 import com.github.petervl80.integrationtests.dto.BookDTO;
+import com.github.petervl80.integrationtests.dto.TokenDTO;
 import com.github.petervl80.integrationtests.dto.wrapper.json.WrapperBookDTO;
 import com.github.petervl80.integrationtests.testcontainers.AbstractIntegrationTest;
 import io.restassured.builder.RequestSpecBuilder;
@@ -30,9 +32,9 @@ class BookControllerJsonTest extends AbstractIntegrationTest {
 
     private static RequestSpecification specification;
     private static ObjectMapper objectMapper;
+
     private static BookDTO book;
-    private static Date launchDate;
-    private static BigDecimal price;
+    private static TokenDTO tokenDto;
 
     @BeforeAll
     static void setUp() {
@@ -40,22 +42,46 @@ class BookControllerJsonTest extends AbstractIntegrationTest {
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
         book = new BookDTO();
-        launchDate = Date.from(Instant.parse("2004-06-12T00:00:00.000Z"));
-        price = BigDecimal.valueOf(5);
+        tokenDto = new TokenDTO();
+    }
+
+    @Test
+    @Order(0)
+    void signin() {
+        AccountCredentialsDTO credentials =
+                new AccountCredentialsDTO("leandro", "admin123");
+
+        tokenDto = given()
+                .basePath("/auth/signin")
+                .port(TestConfigs.SERVER_PORT)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(credentials)
+                .when()
+                .post()
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(TokenDTO.class);
+
+
+        specification = new RequestSpecBuilder()
+                .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_LOCALHOST)
+                .addHeader(TestConfigs.HEADER_PARAM_AUTHORIZATION, "Bearer " + tokenDto.getAccessToken())
+                .setBasePath("/api/books/v1")
+                .setPort(TestConfigs.SERVER_PORT)
+                .addFilter(new RequestLoggingFilter(LogDetail.ALL))
+                .addFilter(new ResponseLoggingFilter(LogDetail.ALL))
+                .build();
+
+        assertNotNull(tokenDto.getAccessToken());
+        assertNotNull(tokenDto.getRefreshToken());
     }
 
     @Test
     @Order(1)
     void createTest() throws JsonProcessingException {
         mockBook();
-
-        specification = new RequestSpecBuilder()
-                .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_LOCALHOST)
-                .setBasePath("/api/books/v1")
-                .setPort(TestConfigs.SERVER_PORT)
-                .addFilter(new RequestLoggingFilter((LogDetail.ALL)))
-                .addFilter(new ResponseLoggingFilter(LogDetail.ALL))
-                .build();
 
         var content = given(specification)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -64,26 +90,26 @@ class BookControllerJsonTest extends AbstractIntegrationTest {
                 .post()
                 .then()
                 .statusCode(200)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .extract()
-                .body().asString();
+                .body()
+                .asString();
 
-        book = objectMapper.readValue(content, BookDTO.class);
+        BookDTO createdBook = objectMapper.readValue(content, BookDTO.class);
+        book = createdBook;
 
+        assertNotNull(createdBook.getId());
         assertNotNull(book.getId());
-
-        assertTrue(book.getId() > 0);
-
-        assertEquals("Steve McConnell", book.getAuthor());
-        assertNotNull(book.getLaunchDate());
-
-        assertEquals(price, book.getPrice());
-        assertEquals("Code complete", book.getTitle());
+        assertEquals("Docker Deep Dive", book.getTitle());
+        assertEquals("Nigel Poulton", book.getAuthor());
+        assertEquals(BigDecimal.valueOf(55.99), book.getPrice());
     }
 
     @Test
     @Order(2)
     void updateTest() throws JsonProcessingException {
-        book.setAuthor("Steve McConnell Jr.");
+
+        book.setTitle("Docker Deep Dive - Updated");
 
         var content = given(specification)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -92,19 +118,22 @@ class BookControllerJsonTest extends AbstractIntegrationTest {
                 .put()
                 .then()
                 .statusCode(200)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .extract()
-                .body().asString();
+                .body()
+                .asString();
 
-        book = objectMapper.readValue(content, BookDTO.class);
+        BookDTO createdBook = objectMapper.readValue(content, BookDTO.class);
+        book = createdBook;
 
+        assertNotNull(createdBook.getId());
+        assertTrue(createdBook.getId() > 0);
+
+        assertNotNull(createdBook.getId());
         assertNotNull(book.getId());
-
-        assertTrue(book.getId() > 0);
-
-        assertEquals("Steve McConnell Jr.", book.getAuthor());
-        assertNotNull(book.getLaunchDate());
-        assertEquals(price, book.getPrice());
-        assertEquals("Code complete", book.getTitle());
+        assertEquals("Docker Deep Dive - Updated", book.getTitle());
+        assertEquals("Nigel Poulton", book.getAuthor());
+        assertEquals(BigDecimal.valueOf(55.99), book.getPrice());
     }
 
     @Test
@@ -118,24 +147,27 @@ class BookControllerJsonTest extends AbstractIntegrationTest {
                 .get("{id}")
                 .then()
                 .statusCode(200)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .extract()
-                .body().asString();
+                .body()
+                .asString();
 
-        book = objectMapper.readValue(content, BookDTO.class);
+        BookDTO createdBook = objectMapper.readValue(content, BookDTO.class);
+        book = createdBook;
 
+        assertNotNull(createdBook.getId());
+        assertTrue(createdBook.getId() > 0);
+
+        assertNotNull(createdBook.getId());
         assertNotNull(book.getId());
-
-        assertTrue(book.getId() > 0);
-
-        assertEquals("Steve McConnell Jr.", book.getAuthor());
-        assertNotNull(book.getLaunchDate());
-        assertEquals(0, book.getPrice().compareTo(price));
-        assertEquals("Code complete", book.getTitle());
+        assertEquals("Docker Deep Dive - Updated", book.getTitle());
+        assertEquals("Nigel Poulton", book.getAuthor());
+        assertEquals(BigDecimal.valueOf(55.99), book.getPrice());
     }
 
     @Test
     @Order(4)
-    void deleteTest(){
+    void deleteTest() throws JsonProcessingException {
 
         given(specification)
                 .pathParam("id", book.getId())
@@ -145,40 +177,54 @@ class BookControllerJsonTest extends AbstractIntegrationTest {
                 .statusCode(204);
     }
 
+
     @Test
     @Order(5)
     void findAllTest() throws JsonProcessingException {
 
         var content = given(specification)
                 .accept(MediaType.APPLICATION_JSON_VALUE)
-                .queryParams("page", 0, "size", 5, "direction", "desc")
+                .queryParams("page", 9 , "size", 12, "direction", "asc")
                 .when()
                 .get()
                 .then()
                 .statusCode(200)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .extract()
-                .body().asString();
+                .body()
+                .asString();
 
+        // List<BookDTO> books = objectMapper.readValue(content, new TypeReference<List<BookDTO>>() {});
         WrapperBookDTO wrapper = objectMapper.readValue(content, WrapperBookDTO.class);
-        List<BookDTO> books = wrapper.getEmbedded().getBooks();
+        var books = wrapper.getEmbedded().getBooks();
 
         BookDTO bookOne = books.getFirst();
 
         assertNotNull(bookOne.getId());
-
+        assertNotNull(bookOne.getTitle());
+        assertNotNull(bookOne.getAuthor());
+        assertNotNull(bookOne.getPrice());
         assertTrue(bookOne.getId() > 0);
+        assertEquals("The Art of Agile Development", bookOne.getTitle());
+        assertEquals("James Shore e Shane Warden", bookOne.getAuthor());
+        assertEquals(BigDecimal.valueOf(97.21), bookOne.getPrice());
 
-        assertEquals("Michael C. Feathers", bookOne.getAuthor());
-        assertNotNull(book.getLaunchDate());
-        assertEquals(0, bookOne.getPrice().compareTo(BigDecimal.valueOf(49)));
-        assertEquals("Working effectively with legacy code", bookOne.getTitle());
+        BookDTO foundBookSeven = books.get(7);
+
+        assertNotNull(foundBookSeven.getId());
+        assertNotNull(foundBookSeven.getTitle());
+        assertNotNull(foundBookSeven.getAuthor());
+        assertNotNull(foundBookSeven.getPrice());
+        assertTrue(foundBookSeven.getId() > 0);
+        assertEquals("The Art of Computer Programming, Volume 1: Fundamental Algorithms", foundBookSeven.getTitle());
+        assertEquals("Donald E. Knuth", foundBookSeven.getAuthor());
+        assertEquals(BigDecimal.valueOf(139.69), foundBookSeven.getPrice());
     }
 
     private void mockBook() {
-        book.setAuthor("Steve McConnell");
-        book.setLaunchDate(launchDate);
-        book.setPrice(price);
-        book.setTitle("Code complete");
+        book.setTitle("Docker Deep Dive");
+        book.setAuthor("Nigel Poulton");
+        book.setPrice(BigDecimal.valueOf(55.99));
+        book.setLaunchDate(new Date());
     }
 }

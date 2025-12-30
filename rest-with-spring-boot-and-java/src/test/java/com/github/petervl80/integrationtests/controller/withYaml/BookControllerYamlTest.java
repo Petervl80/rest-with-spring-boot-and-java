@@ -2,7 +2,9 @@ package com.github.petervl80.integrationtests.controller.withYaml;
 
 import com.github.petervl80.config.TestConfigs;
 import com.github.petervl80.integrationtests.controller.withYaml.mapper.YAMLMapper;
+import com.github.petervl80.integrationtests.dto.AccountCredentialsDTO;
 import com.github.petervl80.integrationtests.dto.BookDTO;
+import com.github.petervl80.integrationtests.dto.TokenDTO;
 import com.github.petervl80.integrationtests.dto.wrapper.xml.PagedModelBook;
 import com.github.petervl80.integrationtests.testcontainers.AbstractIntegrationTest;
 import io.restassured.builder.RequestSpecBuilder;
@@ -16,15 +18,16 @@ import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Nested
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BookControllerYamlTest extends AbstractIntegrationTest {
@@ -33,100 +36,60 @@ class BookControllerYamlTest extends AbstractIntegrationTest {
     private static YAMLMapper objectMapper;
 
     private static BookDTO book;
-    private static Date launchDate;
-    private static BigDecimal price;
+    private static TokenDTO tokenDto;
 
     @BeforeAll
     static void setUp() {
         objectMapper = new YAMLMapper();
         book = new BookDTO();
-        launchDate = Date.from(Instant.parse("2004-06-12T00:00:00.000Z"));
-        price = BigDecimal.valueOf(5);
+        tokenDto = new TokenDTO();
     }
 
     @Test
-    @Order(1)
-    void createTest() {
-        mockBook();
+    @Order(0)
+    void signin() throws JsonProcessingException {
+        AccountCredentialsDTO credentials =
+                new AccountCredentialsDTO("leandro", "admin123");
 
-        specification = new RequestSpecBuilder()
-            .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_LOCALHOST)
-            .setBasePath("/api/books/v1")
-            .setPort(TestConfigs.SERVER_PORT)
-                .addFilter(new RequestLoggingFilter(LogDetail.ALL))
-                .addFilter(new ResponseLoggingFilter(LogDetail.ALL))
-            .build();
-
-        book = given().config(
-                RestAssuredConfig.config()
-                    .encoderConfig(
-                        EncoderConfig.encoderConfig().
-                            encodeContentTypeAs(MediaType.APPLICATION_YAML_VALUE, ContentType.TEXT))
-                ).spec(specification)
-            .contentType(MediaType.APPLICATION_YAML_VALUE)
-            .accept(MediaType.APPLICATION_YAML_VALUE)
-                .body(book, objectMapper)
-            .when()
-                .post()
-            .then()
-                .statusCode(200)
-                .contentType(MediaType.APPLICATION_YAML_VALUE)
-            .extract()
-                .body()
-                    .as(BookDTO.class, objectMapper);
-
-        assertNotNull(book.getId());
-
-        assertTrue(book.getId() > 0);
-
-        assertEquals("Steve McConnell", book.getAuthor());
-        assertNotNull(book.getLaunchDate());
-
-        assertEquals(price, book.getPrice());
-        assertEquals("Code complete", book.getTitle());
-
-    }
-    
-    @Test
-    @Order(2)
-    void updateTest(){
-        book.setAuthor("Steve McConnell Jr.");
-
-        book = given().config(
+        tokenDto = given()
+                .config(
                         RestAssuredConfig.config()
                                 .encoderConfig(
                                         EncoderConfig.encoderConfig().
                                                 encodeContentTypeAs(MediaType.APPLICATION_YAML_VALUE, ContentType.TEXT))
-                ).spec(specification)
-            .contentType(MediaType.APPLICATION_YAML_VALUE)
-            .accept(MediaType.APPLICATION_YAML_VALUE)
-                .body(book, objectMapper)
-            .when()
-                .put()
-            .then()
-                .statusCode(200)
+                )
+                .basePath("/auth/signin")
+                .port(TestConfigs.SERVER_PORT)
                 .contentType(MediaType.APPLICATION_YAML_VALUE)
-            .extract()
+                .accept(MediaType.APPLICATION_YAML_VALUE)
+                .body(credentials, objectMapper)
+                .when()
+                .post()
+                .then()
+                .statusCode(200)
+                .extract()
                 .body()
-                .as(BookDTO.class, objectMapper);
+                .as(TokenDTO.class, objectMapper);
 
-        assertNotNull(book.getId());
+        specification = new RequestSpecBuilder()
+                .addHeader(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_LOCALHOST)
+                .addHeader(TestConfigs.HEADER_PARAM_AUTHORIZATION, "Bearer " + tokenDto.getRefreshToken())
+                .setBasePath("/api/books/v1")
+                .setPort(TestConfigs.SERVER_PORT)
+                .addFilter(new RequestLoggingFilter(LogDetail.ALL))
+                .addFilter(new ResponseLoggingFilter(LogDetail.ALL))
+                .build();
 
-        assertTrue(book.getId() > 0);
-
-        assertEquals("Steve McConnell Jr.", book.getAuthor());
-        assertNotNull(book.getLaunchDate());
-
-        assertEquals(price, book.getPrice());
-        assertEquals("Code complete", book.getTitle());
-
+        assertNotNull(tokenDto.getAccessToken());
+        assertNotNull(tokenDto.getRefreshToken());
     }
 
     @Test
-    @Order(3)
-    void findByIdTest(){
+    @Order(1)
+    void createTest() throws JsonProcessingException {
+        mockBook();
 
-        book = given().config(
+        var createdBook = given().config(
                         RestAssuredConfig.config()
                                 .encoderConfig(
                                         EncoderConfig.encoderConfig().
@@ -134,47 +97,114 @@ class BookControllerYamlTest extends AbstractIntegrationTest {
                 ).spec(specification)
                 .contentType(MediaType.APPLICATION_YAML_VALUE)
                 .accept(MediaType.APPLICATION_YAML_VALUE)
-                    .pathParam("id", book.getId())
+                .body(book, objectMapper)
                 .when()
-                    .get("{id}")
+                .post()
                 .then()
-                    .statusCode(200)
-                    .contentType(MediaType.APPLICATION_YAML_VALUE)
+                .statusCode(200)
+                .contentType(MediaType.APPLICATION_YAML_VALUE)
                 .extract()
-                    .body()
+                .body()
                 .as(BookDTO.class, objectMapper);
 
+        book = createdBook;
+
+        assertNotNull(createdBook.getId());
         assertNotNull(book.getId());
+        assertEquals("Docker Deep Dive", book.getTitle());
+        assertEquals("Nigel Poulton", book.getAuthor());
+        assertEquals(BigDecimal.valueOf(55.99), book.getPrice());
 
-        assertTrue(book.getId() > 0);
+    }
 
-        assertEquals("Steve McConnell Jr.", book.getAuthor());
-        assertNotNull(book.getLaunchDate());
+    @Test
+    @Order(2)
+    void updateTest() throws JsonProcessingException {
 
-        assertEquals(0, book.getPrice().compareTo(price));
-        assertEquals("Code complete", book.getTitle());
+        book.setTitle("Docker Deep Dive - Updated");
+
+        var createdBook = given().config(
+                        RestAssuredConfig.config()
+                                .encoderConfig(
+                                        EncoderConfig.encoderConfig().
+                                                encodeContentTypeAs(MediaType.APPLICATION_YAML_VALUE, ContentType.TEXT))
+                ).spec(specification)
+                .contentType(MediaType.APPLICATION_YAML_VALUE)
+                .accept(MediaType.APPLICATION_YAML_VALUE)
+                .body(book, objectMapper)
+                .when()
+                .put()
+                .then()
+                .statusCode(200)
+                .contentType(MediaType.APPLICATION_YAML_VALUE)
+                .extract()
+                .body()
+                .as(BookDTO.class, objectMapper);
+
+        book = createdBook;
+
+        assertNotNull(createdBook.getId());
+        assertNotNull(book.getId());
+        assertEquals("Docker Deep Dive - Updated", book.getTitle());
+        assertEquals("Nigel Poulton", book.getAuthor());
+        assertEquals(BigDecimal.valueOf(55.99), book.getPrice());
+
+    }
+
+    @Test
+    @Order(3)
+    void findByIdTest() throws JsonProcessingException {
+
+        var createdBook = given().config(
+                        RestAssuredConfig.config()
+                                .encoderConfig(
+                                        EncoderConfig.encoderConfig().
+                                                encodeContentTypeAs(MediaType.APPLICATION_YAML_VALUE, ContentType.TEXT))
+                ).spec(specification)
+                .contentType(MediaType.APPLICATION_YAML_VALUE)
+                .accept(MediaType.APPLICATION_YAML_VALUE)
+                .pathParam("id", book.getId())
+                .when()
+                .get("{id}")
+                .then()
+                .statusCode(200)
+                .contentType(MediaType.APPLICATION_YAML_VALUE)
+                .extract()
+                .body()
+                .as(BookDTO.class, objectMapper);
+
+        book = createdBook;
+
+        assertNotNull(createdBook.getId());
+        assertTrue(createdBook.getId() > 0);
+
+        assertNotNull(createdBook.getId());
+        assertNotNull(book.getId());
+        assertEquals("Docker Deep Dive - Updated", book.getTitle());
+        assertEquals("Nigel Poulton", book.getAuthor());
+        assertEquals(BigDecimal.valueOf(55.99), book.getPrice());
     }
 
     @Test
     @Order(4)
-    void deleteTest(){
+    void deleteTest() throws JsonProcessingException {
 
         given(specification)
                 .pathParam("id", book.getId())
-            .when()
+                .when()
                 .delete("{id}")
-            .then()
+                .then()
                 .statusCode(204);
     }
 
 
     @Test
     @Order(5)
-    void findAllTest(){
+    void findAllTest() throws JsonProcessingException {
 
         var response = given(specification)
                 .accept(MediaType.APPLICATION_YAML_VALUE)
-                .queryParams("page", 0, "size", 5, "direction", "desc")
+                .queryParams("page", 9 , "size", 12, "direction", "asc")
                 .when()
                 .get()
                 .then()
@@ -184,24 +214,35 @@ class BookControllerYamlTest extends AbstractIntegrationTest {
                 .body()
                 .as(PagedModelBook.class, objectMapper);
 
-        List<BookDTO> books = response.getContent();
+        List<BookDTO> content = response.getContent();
 
-        BookDTO bookOne = books.getFirst();
+        BookDTO bookOne = content.getFirst();
 
         assertNotNull(bookOne.getId());
-
+        assertNotNull(bookOne.getTitle());
+        assertNotNull(bookOne.getAuthor());
+        assertNotNull(bookOne.getPrice());
         assertTrue(bookOne.getId() > 0);
+        assertEquals("The Art of Agile Development", bookOne.getTitle());
+        assertEquals("James Shore e Shane Warden", bookOne.getAuthor());
+        assertEquals(BigDecimal.valueOf(97.21), bookOne.getPrice());
 
-        assertEquals("Michael C. Feathers", bookOne.getAuthor());
-        assertNotNull(book.getLaunchDate());
-        assertEquals(0, bookOne.getPrice().compareTo(BigDecimal.valueOf(49)));
-        assertEquals("Working effectively with legacy code", bookOne.getTitle());
+        BookDTO foundBookSeven = content.get(7);
+
+        assertNotNull(foundBookSeven.getId());
+        assertNotNull(foundBookSeven.getTitle());
+        assertNotNull(foundBookSeven.getAuthor());
+        assertNotNull(foundBookSeven.getPrice());
+        assertTrue(foundBookSeven.getId() > 0);
+        assertEquals("The Art of Computer Programming, Volume 1: Fundamental Algorithms", foundBookSeven.getTitle());
+        assertEquals("Donald E. Knuth", foundBookSeven.getAuthor());
+        assertEquals(BigDecimal.valueOf(139.69), foundBookSeven.getPrice());
     }
 
     private void mockBook() {
-        book.setAuthor("Steve McConnell");
-        book.setLaunchDate(launchDate);
-        book.setPrice(price);
-        book.setTitle("Code complete");
+        book.setTitle("Docker Deep Dive");
+        book.setAuthor("Nigel Poulton");
+        book.setPrice(BigDecimal.valueOf(55.99));
+        book.setLaunchDate(new Date());
     }
 }

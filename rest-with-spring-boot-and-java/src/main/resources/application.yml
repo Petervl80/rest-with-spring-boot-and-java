@@ -1,3 +1,5 @@
+server:
+  port: 8080
 cors:
   originPatterns: "http://localhost:8080,http://localhost:3000"
 file:
@@ -14,10 +16,10 @@ spring:
   application:
     name: rest-with-spring-boot-and-java
   datasource:
-    url: jdbc:mysql://localhost:3306/rest_with_spring_boot?useTimezone=true&serverTimezone=UTC
+    url: ${DATASOURCE_URL}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: root123457
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: none
