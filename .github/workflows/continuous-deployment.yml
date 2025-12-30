@@ -18,8 +18,24 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
-    - uses: actions/setup-java@v4
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
       with:
         java-version: '21'
         distribution: 'temurin'
-        cache: maven
+        cache: 'maven'
+
+    - name: Build Application .jar
+      working-directory: ./rest-with-spring-boot-and-java
+      run: mvn clean package
+
+    - name: Docker Compose Build
+      working-directory: .
+      run: docker compose build
+
+    - name: Push to Docker Hub
+      run: |
+        docker tag ${{ secrets.DOCKER_USERNAME }}/rest-with-spring-boot-and-java:latest petervl80/rest-with-spring-boot-and-java:${{ github.run_id }}
+        
+        docker push ${{ secrets.DOCKER_USERNAME }}/rest-with-spring-boot-and-java:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/rest-with-spring-boot-and-java:${{ github.run_id }}
